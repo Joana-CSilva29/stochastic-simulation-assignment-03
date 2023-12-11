@@ -71,6 +71,7 @@ def simulated_annealing(particles, radius, initial_temp, final_temp, cooling_rat
             best_particles = np.copy(particles)
 
         energy_change = abs(energies[-1] - current_energy)
+        
         if energy_change < tolerance:
             consecutive_low_change_count += 1
         else:
@@ -140,12 +141,12 @@ def simulate_and_visualize(num_particles, radius, initial_temp, final_temp, cool
 
 
 if __name__ == "__main__":    
-    num_particles = 25
+    num_particles = 10
     radius = 1
-    initial_temp = 1000
+    initial_temp = 10000
     final_temp = 0.001
-    cooling_rate = 0.998
-    max_step = 0.08
+    cooling_rate = 0.9999
+    max_step = 0.01
     tolerance = 0.001
     max_consecutive_iterations = 10 
 
@@ -172,11 +173,11 @@ if __name__ == "__main__":
     ax.set_aspect('equal', adjustable='box')
 
     scat = ax.scatter(particle_history[0][:, 0], particle_history[0][:, 1])
-    cmap = plt.cm.get_cmap('coolwarm')
+    cmap = plt.colormaps['coolwarm']
     norm = Normalize(vmin=min(energies), vmax=max(energies))
     time_text = ax.text(0.02, 0.95, '', transform=ax.transAxes)
 
-    ax_energy.set_title("System Energy")
+    ax_energy.set_title("System Energy for {} Particles".format(num_particles))
     ax_energy.set_xlabel("Step")
     ax_energy.set_ylabel("Energy")
     energy_line, = ax_energy.plot([], [], lw=2)
