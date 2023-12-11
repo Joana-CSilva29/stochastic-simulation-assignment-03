@@ -6,17 +6,18 @@ import seaborn as sns
 from matplotlib.animation import FuncAnimation
 from matplotlib.colors import Normalize, PowerNorm
 from matplotlib.cm import ScalarMappable
+from numba import jit
+import cProfile
 
 sns.set_style("whitegrid")
 
-
-
-
+@jit
 def cartesian_to_polar(x, y):
     r = np.sqrt(x**2 + y**2)
     phi = np.degrees(np.arctan2(y, x)) % 360
     return r, phi
 
+@jit
 def calculate_energy(particles):
     energy = 0
     for i in range(len(particles)):
@@ -25,6 +26,7 @@ def calculate_energy(particles):
             energy += 1 / distance
     return energy
 
+@jit
 def initial_configuration(num_particles):
     particles = []
     for i in range(num_particles):
@@ -33,6 +35,7 @@ def initial_configuration(num_particles):
         particles.append(radius * np.array([np.cos(angle), np.sin(angle)]))
     return np.array(particles)
 
+@jit
 def move_particle(particle, particles, max_step, radius):
     force_direction = np.array([0.0, 0.0])
     for other_particle in particles:
@@ -52,6 +55,7 @@ def move_particle(particle, particles, max_step, radius):
 
     return new_particle
 
+@jit
 def simulated_annealing(particles, radius, initial_temp, final_temp, cooling_rate, max_step, tolerance, max_consecutive_iterations):
     temperature = initial_temp
     best_energy = calculate_energy(particles)
@@ -86,6 +90,7 @@ def simulated_annealing(particles, radius, initial_temp, final_temp, cooling_rat
 
     return best_particles, particle_history, energies
 
+@jit
 def update_plot(frame, particles, scat, radius, energies, cmap, norm, time_text, table, energy_line, ax_energy, display_table):
     particle_positions = particles[frame]
     scat.set_offsets(particle_positions)
@@ -95,7 +100,7 @@ def update_plot(frame, particles, scat, radius, energies, cmap, norm, time_text,
     colors = cmap(norm(current_energy))
     scat.set_color(colors)
 
-    time_text.set_text(f"Step: {frame}")
+    time_text.set_text(f"Step: {frame}\nParticles: {len(particle_positions)}")
 
     if display_table and table is not None:
         polar_coords = [cartesian_to_polar(x, y) for x, y in particle_positions]
@@ -114,6 +119,7 @@ def update_plot(frame, particles, scat, radius, energies, cmap, norm, time_text,
 
     return scat, time_text
 
+@jit
 def setup_table(ax_table, num_particles):
     header = ["Particle", fr"r", fr"$\phi$"]
     table_data = [header] + [["" for _ in header] for _ in range(num_particles)]
@@ -129,19 +135,19 @@ def setup_table(ax_table, num_particles):
     ax_table.axis('off')
     return table
 
-def simulate_and_visualize(num_particles, radius, initial_temp, final_temp, cooling_rate, max_step):
+@jit
+def simulate_and_visualize(num_particles, radius, initial_temp, final_temp, cooling_rate, max_step, tolerance, max_consecutive_iterations):
     initial_particles = initial_configuration(num_particles)
     best_particles, particle_history, energies = simulated_annealing(initial_particles, 
                                                                      radius, initial_temp, final_temp, cooling_rate, 
                                                                      max_step, tolerance, max_consecutive_iterations)
-    return best_particles, particle_history, energies, table
+    return best_particles, particle_history, energies
 
 
 
 
-
-if __name__ == "__main__":    
-    num_particles = 10
+def main():
+    num_particles = 25
     radius = 1
     initial_temp = 10000
     final_temp = 0.001
@@ -153,7 +159,7 @@ if __name__ == "__main__":
     table = None
     display_table = False
 
-    best_particles, particle_history, energies, table = simulate_and_visualize(num_particles, radius, initial_temp, final_temp, cooling_rate, max_step)
+    best_particles, particle_history, energies = simulate_and_visualize(num_particles, radius, initial_temp, final_temp, cooling_rate, max_step, tolerance, max_consecutive_iterations)
 
 
     fig = plt.figure(figsize=(15, 6))
@@ -196,3 +202,9 @@ if __name__ == "__main__":
                     repeat=False)
 
     plt.show()
+
+
+if __name__ == "__main__":    
+    cProfile.run('main()', 'profile_stats.prof')
+    
+    

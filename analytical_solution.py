@@ -38,14 +38,9 @@ plt.annotate('Crossover Point (n={})'.format(crossover_n),
              xytext=(crossover_n+4, omega_circle[crossover_index]),
              ha='center')
 
-# Add labels and title
 plt.xlabel('Number of charges (n)')
 plt.ylabel(r'Potential Energy ($\Omega$)')
 plt.title('Potential Energy Configurations')
-
-# Add grid and legend
 plt.legend()
 plt.grid(True)
-
-# Show the plot with enhancements
 plt.show()
