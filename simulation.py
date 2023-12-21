@@ -17,6 +17,34 @@ def cartesian_to_polar(x, y):
     phi = np.degrees(np.arctan2(y, x)) % 360
     return r, phi
 
+
+
+
+"""Cooling functions"""
+
+def exponential_cooling(initial_temp, cooling_rate, iteration):
+    return initial_temp * (cooling_rate ** iteration)
+
+def linear_cooling(initial_temp, cooling_rate, iteration):
+    return max(initial_temp - cooling_rate * iteration, 0)
+
+def boltzmann_cooling(initial_temp, iteration, _unused):
+    if iteration == 0:
+        return initial_temp
+    return initial_temp / math.log(1 + iteration)
+
+def logarithmic_cooling(initial_temp, cooling_rate, iteration):
+    return initial_temp / (1 + cooling_rate * math.log(1 + iteration))
+
+def quadratic_cooling(initial_temp, cooling_rate, iteration):
+    return initial_temp / (1 + cooling_rate * (iteration ** 2))
+
+def fast_annealing(initial_temp, cooling_rate, iteration):
+    return initial_temp / (1 + cooling_rate * iteration)
+
+
+
+
 # @jit
 def calculate_energy(particles):
     energy = 0
@@ -56,8 +84,9 @@ def move_particle(particle, particles, max_step, radius):
     return new_particle
 
 # @jit
-def simulated_annealing(particles, radius, initial_temp, final_temp, cooling_rate, max_step, tolerance, max_consecutive_iterations):
+def simulated_annealing(particles, radius, initial_temp, cooling_function, max_step, tolerance, max_consecutive_iterations, cooling_parameter):
     temperature = initial_temp
+    iteration = 0
     best_energy = calculate_energy(particles)
     best_particles = np.copy(particles)
     particle_history = [np.copy(particles)]
@@ -65,17 +94,19 @@ def simulated_annealing(particles, radius, initial_temp, final_temp, cooling_rat
 
     consecutive_low_change_count = 0
 
-    while temperature > final_temp:
+    while temperature > 0:
         for i in range(len(particles)):
-            particles[i] = move_particle(particles[i], particles, max_step * temperature / initial_temp, radius)
-        
+            temperature = cooling_function(initial_temp, cooling_parameter, iteration)
+            new_temp_ratio = temperature / initial_temp
+            particles[i] = move_particle(particles[i], particles, max_step * new_temp_ratio, radius)
+
         current_energy = calculate_energy(particles)
         if current_energy < best_energy:
             best_energy = current_energy
             best_particles = np.copy(particles)
 
         energy_change = abs(energies[-1] - current_energy)
-        
+
         if energy_change < tolerance:
             consecutive_low_change_count += 1
         else:
@@ -84,11 +115,13 @@ def simulated_annealing(particles, radius, initial_temp, final_temp, cooling_rat
         if consecutive_low_change_count >= max_consecutive_iterations:
             break
 
-        temperature *= cooling_rate
+        iteration += 1
         particle_history.append(np.copy(particles))
         energies.append(current_energy)
 
     return best_particles, particle_history, energies
+
+
 
 # @jit
 def update_plot(frame, particles, scat, radius, energies, cmap, norm, time_text, table, energy_line, ax_energy, display_table):
@@ -136,31 +169,43 @@ def setup_table(ax_table, num_particles):
     return table
 
 # @jit
-def simulate_and_visualize(num_particles, radius, initial_temp, final_temp, cooling_rate, max_step, tolerance, max_consecutive_iterations):
+def simulate_and_visualize(num_particles, radius, initial_temp, cooling_function, max_step, tolerance, max_consecutive_iterations, cooling_parameter):
     initial_particles = initial_configuration(num_particles)
-    best_particles, particle_history, energies = simulated_annealing(initial_particles, 
-                                                                     radius, initial_temp, final_temp, cooling_rate, 
-                                                                     max_step, tolerance, max_consecutive_iterations)
+    best_particles, particle_history, energies = simulated_annealing(
+        initial_particles, 
+        radius, 
+        initial_temp, 
+        cooling_function, 
+        max_step, 
+        tolerance, 
+        max_consecutive_iterations, 
+        cooling_parameter
+    )
+
     return best_particles, particle_history, energies
 
 
 
 
+
 def main():
-    num_particles = 25
+    num_particles = 12
     radius = 1
     initial_temp = 10000
     final_temp = 0.001
     cooling_rate = 0.9999
-    max_step = 0.01
+    max_step = 0.02
     tolerance = 0.001
     max_consecutive_iterations = 10 
 
     table = None
     display_table = False
 
-    best_particles, particle_history, energies = simulate_and_visualize(num_particles, radius, initial_temp, final_temp, cooling_rate, max_step, tolerance, max_consecutive_iterations)
+    # exponential_cooling, linear_cooling, initial_step for logarithmic_cooling, cooling_step for quadratic_cooling, cooling_rate for fast_annealing
+    cooling_parameter = 0.9999  
+    cooling_function = boltzmann_cooling
 
+    best_particles, particle_history, energies = simulate_and_visualize(num_particles, radius, initial_temp, cooling_function, max_step, tolerance, max_consecutive_iterations, cooling_parameter)
 
     fig = plt.figure(figsize=(15, 6))
     gs = fig.add_gridspec(1, 3, width_ratios=[3, 2, 1])
