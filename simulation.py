@@ -43,8 +43,6 @@ def fast_annealing(initial_temp, cooling_rate, iteration):
     return initial_temp / (1 + cooling_rate * iteration)
 
 
-
-
 # @jit
 def calculate_energy(particles):
     energy = 0
@@ -83,6 +81,11 @@ def move_particle(particle, particles, max_step, radius):
 
     return new_particle
 
+
+def boltzmann_probability(energy_change, temperature):
+    """Calculate the Boltzmann probability of accepting a higher-energy state."""
+    return np.exp(-energy_change / temperature)
+
 # @jit
 def simulated_annealing(particles, radius, initial_temp, cooling_function, max_step, tolerance, max_consecutive_iterations, cooling_parameter):
     temperature = initial_temp
@@ -95,12 +98,23 @@ def simulated_annealing(particles, radius, initial_temp, cooling_function, max_s
     consecutive_low_change_count = 0
 
     while temperature > 0:
+        new_particles = np.copy(particles)
         for i in range(len(particles)):
             temperature = cooling_function(initial_temp, cooling_parameter, iteration)
             new_temp_ratio = temperature / initial_temp
-            particles[i] = move_particle(particles[i], particles, max_step * new_temp_ratio, radius)
+            new_particle = move_particle(particles[i], particles, max_step * new_temp_ratio, radius)
+            new_particles[i] = new_particle
 
-        current_energy = calculate_energy(particles)
+        new_energy = calculate_energy(new_particles)
+        energy_change = new_energy - calculate_energy(particles)
+
+        # Use the Boltzmann probability function for the probabilistic check
+        if energy_change < 0 or np.random.uniform() < boltzmann_probability(energy_change, temperature):
+            particles = new_particles
+            current_energy = new_energy
+        else:
+            current_energy = calculate_energy(particles)
+
         if current_energy < best_energy:
             best_energy = current_energy
             best_particles = np.copy(particles)
@@ -147,6 +161,7 @@ def update_plot(frame, particles, scat, radius, energies, cmap, norm, time_text,
 
     energy_line.set_data(range(frame+1), energies[:frame+1])
     ax_energy.set_xlim(0, frame+1)
+    ax_energy.set_ylim(bottom=0)
     ax_energy.relim()
     ax_energy.autoscale_view()
 
@@ -251,5 +266,3 @@ def main():
 
 if __name__ == "__main__":    
     cProfile.run('main()', 'profile_stats.prof')
-    
-    
