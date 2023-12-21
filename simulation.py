@@ -11,13 +11,13 @@ import cProfile
 
 sns.set_style("whitegrid")
 
-@jit
+# @jit
 def cartesian_to_polar(x, y):
     r = np.sqrt(x**2 + y**2)
     phi = np.degrees(np.arctan2(y, x)) % 360
     return r, phi
 
-@jit
+# @jit
 def calculate_energy(particles):
     energy = 0
     for i in range(len(particles)):
@@ -26,7 +26,7 @@ def calculate_energy(particles):
             energy += 1 / distance
     return energy
 
-@jit
+# @jit
 def initial_configuration(num_particles):
     particles = []
     for i in range(num_particles):
@@ -35,7 +35,7 @@ def initial_configuration(num_particles):
         particles.append(radius * np.array([np.cos(angle), np.sin(angle)]))
     return np.array(particles)
 
-@jit
+# @jit
 def move_particle(particle, particles, max_step, radius):
     force_direction = np.array([0.0, 0.0])
     for other_particle in particles:
@@ -55,7 +55,7 @@ def move_particle(particle, particles, max_step, radius):
 
     return new_particle
 
-@jit
+# @jit
 def simulated_annealing(particles, radius, initial_temp, final_temp, cooling_rate, max_step, tolerance, max_consecutive_iterations):
     temperature = initial_temp
     best_energy = calculate_energy(particles)
@@ -90,7 +90,7 @@ def simulated_annealing(particles, radius, initial_temp, final_temp, cooling_rat
 
     return best_particles, particle_history, energies
 
-@jit
+# @jit
 def update_plot(frame, particles, scat, radius, energies, cmap, norm, time_text, table, energy_line, ax_energy, display_table):
     particle_positions = particles[frame]
     scat.set_offsets(particle_positions)
@@ -119,7 +119,7 @@ def update_plot(frame, particles, scat, radius, energies, cmap, norm, time_text,
 
     return scat, time_text
 
-@jit
+# @jit
 def setup_table(ax_table, num_particles):
     header = ["Particle", fr"r", fr"$\phi$"]
     table_data = [header] + [["" for _ in header] for _ in range(num_particles)]
@@ -135,7 +135,7 @@ def setup_table(ax_table, num_particles):
     ax_table.axis('off')
     return table
 
-@jit
+# @jit
 def simulate_and_visualize(num_particles, radius, initial_temp, final_temp, cooling_rate, max_step, tolerance, max_consecutive_iterations):
     initial_particles = initial_configuration(num_particles)
     best_particles, particle_history, energies = simulated_annealing(initial_particles, 
