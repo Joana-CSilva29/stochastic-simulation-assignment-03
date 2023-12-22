@@ -112,7 +112,7 @@ def main():
                 boundary_condition,
                 reference_energy
             )
-            normalized_energies = 100 * np.array(energies) / energies[0]  # Normalize to start at 100%
+            normalized_energies = 100 * np.array(energies) / energies[0]
             if len(normalized_energies) < max_display_iterations:
                 padding_length = max_display_iterations - len(normalized_energies)
                 padded_energies = np.pad(normalized_energies, (0, padding_length), 'constant', constant_values=(normalized_energies[-1],))
