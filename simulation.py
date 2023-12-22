@@ -19,7 +19,7 @@ def initial_configuration(num_particles):
     particles = []
     for i in range(num_particles):
         angle = np.random.uniform(0, 2 * np.pi)
-        radius = np.random.uniform(0.99, 1)
+        radius = np.random.uniform(0.01, 0.02)
         particles.append(radius * np.array([np.cos(angle), np.sin(angle)]))
     return np.array(particles)
 
@@ -73,8 +73,8 @@ def simulate_and_visualize(num_particles, radius, initial_temp, cooling_function
 
 
 def main():
-    boundary_condition = "periodic" # "circular" or "periodic"
-    num_particles = 12
+    boundary_condition = "circular" # "circular" or "periodic"
+    num_particles = 25
     radius = 1
     initial_temp = 10
     max_step = 0.02
@@ -113,7 +113,7 @@ def main():
     norm = Normalize(vmin=min(energies), vmax=max(energies))
     time_text = ax.text(0.02, 0.95, '', transform=ax.transAxes)
 
-    ax_energy.set_title("System Energy for {} Particles".format(num_particles))
+    ax_energy.set_title(f"System Energy for {num_particles} Particles\nCooling Schedule: {format_function_name(cooling_function)}\nBoundary Condition: {boundary_condition}")    
     ax_energy.set_xlabel("Step")
     ax_energy.set_ylabel("Energy")
     energy_line, = ax_energy.plot([], [], lw=2)

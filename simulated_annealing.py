@@ -1,15 +1,22 @@
 import numpy as np
+from numba import jit
 
 """
     This module contains the simulated annealing algorithm and utility functions.
 """
 
 
-# Utility function to convert cartesian to polar coordinates
+# Utilities
 def cartesian_to_polar(x, y):
     r = np.sqrt(x**2 + y**2)
     phi = np.degrees(np.arctan2(y, x)) % 360
     return r, phi
+
+def format_function_name(function):
+    name = function.__name__
+    words = name.split('_')
+    title_case_words = [word.capitalize() for word in words]
+    return ' '.join(title_case_words)
 
 
 # Maximum energy configuration
@@ -36,7 +43,7 @@ def calculate_energy(particles, max_energy):
     return energy / max_energy
 
 
-
+@jit
 def move_particle(particle, particles, max_step, radius, boundary_condition):
     force_direction = np.array([0.0, 0.0])
     for other_particle in particles:
@@ -45,9 +52,8 @@ def move_particle(particle, particles, max_step, radius, boundary_condition):
 
         difference = particle - other_particle
 
-        # Calculate the shortest distance for periodic boundary
         if boundary_condition == "periodic":
-            for i in range(2): # adjust x and y separately
+            for i in range(2):
                 if abs(difference[i]) > radius:
                     difference[i] -= np.sign(difference[i]) * 2 * radius
 
@@ -55,7 +61,6 @@ def move_particle(particle, particles, max_step, radius, boundary_condition):
         if distance == 0:
             continue
 
-        # Repulsion force calculation
         force_direction += difference / distance**3
 
     if np.linalg.norm(force_direction) > 0:
@@ -64,16 +69,12 @@ def move_particle(particle, particles, max_step, radius, boundary_condition):
     else:
         new_particle = particle
 
-    # Boundary condition handling
     if boundary_condition == "circular":
         if np.linalg.norm(new_particle) > radius:
             new_particle = new_particle / np.linalg.norm(new_particle) * radius
     elif boundary_condition == "periodic":
-        # Check if the particle crosses the boundary
         if np.linalg.norm(new_particle) > radius:
-            # Calculate the angle of the particle's position
             angle = np.arctan2(new_particle[1], new_particle[0])
-            # Position the particle on the opposite side of the circle
             new_particle = np.array([np.cos(angle), np.sin(angle)]) * radius
 
     return new_particle
