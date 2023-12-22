@@ -19,7 +19,7 @@ def initial_configuration(num_particles):
     particles = []
     for i in range(num_particles):
         angle = np.random.uniform(0, 2 * np.pi)
-        radius = np.random.uniform(0, 0.1)
+        radius = np.random.uniform(0.99, 1)
         particles.append(radius * np.array([np.cos(angle), np.sin(angle)]))
     return np.array(particles)
 
@@ -73,8 +73,8 @@ def simulate_and_visualize(num_particles, radius, initial_temp, cooling_function
 
 
 def main():
-    boundary_condition = "circular" # "circular" or "periodic"
-    num_particles = 3
+    boundary_condition = "periodic" # "circular" or "periodic"
+    num_particles = 12
     radius = 1
     initial_temp = 10
     max_step = 0.02

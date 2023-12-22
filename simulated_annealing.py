@@ -21,6 +21,11 @@ def maximum_energy_configuration(num_particles, radius):
     return np.array(particles)
 
 
+def potential_energy_circle(n):
+    omega_n = (n / 4) * sum(1 / np.sin((np.pi * j) / n) for j in range(1, n))
+    return omega_n
+
+
 # Calculate energy
 def calculate_energy(particles, max_energy):
     energy = 0
@@ -32,16 +37,25 @@ def calculate_energy(particles, max_energy):
 
 
 
-# Move particle
 def move_particle(particle, particles, max_step, radius, boundary_condition):
     force_direction = np.array([0.0, 0.0])
     for other_particle in particles:
         if np.array_equal(particle, other_particle):
             continue
+
         difference = particle - other_particle
+
+        # Calculate the shortest distance for periodic boundary
+        if boundary_condition == "periodic":
+            for i in range(2): # adjust x and y separately
+                if abs(difference[i]) > radius:
+                    difference[i] -= np.sign(difference[i]) * 2 * radius
+
         distance = np.linalg.norm(difference)
         if distance == 0:
             continue
+
+        # Repulsion force calculation
         force_direction += difference / distance**3
 
     if np.linalg.norm(force_direction) > 0:
@@ -50,16 +64,22 @@ def move_particle(particle, particles, max_step, radius, boundary_condition):
     else:
         new_particle = particle
 
+    # Boundary condition handling
     if boundary_condition == "circular":
         if np.linalg.norm(new_particle) > radius:
             new_particle = new_particle / np.linalg.norm(new_particle) * radius
     elif boundary_condition == "periodic":
-        angle = np.arctan2(new_particle[1], new_particle[0])
+        # Check if the particle crosses the boundary
         if np.linalg.norm(new_particle) > radius:
-            print("Particle escaped")
-            new_particle = np.array([np.cos(angle), np.sin(angle)]) * radius * -1
+            # Calculate the angle of the particle's position
+            angle = np.arctan2(new_particle[1], new_particle[0])
+            # Position the particle on the opposite side of the circle
+            new_particle = np.array([np.cos(angle), np.sin(angle)]) * radius
 
     return new_particle
+
+
+
 
 
 

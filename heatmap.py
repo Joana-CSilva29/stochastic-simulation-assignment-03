@@ -4,11 +4,13 @@ from matplotlib.colors import Normalize, PowerNorm, LogNorm
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import simulation as ps
-from simulation import simulate_and_visualize, maximum_energy_configuration, calculate_energy
-from simulation import exponential_cooling, linear_cooling, boltzmann_cooling, logarithmic_cooling, quadratic_cooling, fast_annealing
 from multiprocessing import Pool
 from numba import jit
 import matplotlib.colors as mcolors
+
+from simulation import *
+from simulated_annealing import *
+from cooling_functions import *
 
 # Simulation parameters
 num_charges = 50
