@@ -4,7 +4,8 @@ from matplotlib.colors import Normalize, PowerNorm, LogNorm
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import simulation as ps
-from simulation import simulate_and_visualize
+from simulation import simulate_and_visualize, maximum_energy_configuration, calculate_energy
+from simulation import exponential_cooling, linear_cooling, boltzmann_cooling, logarithmic_cooling, quadratic_cooling, fast_annealing
 from multiprocessing import Pool
 from numba import jit
 import matplotlib.colors as mcolors
@@ -12,6 +13,7 @@ import matplotlib.colors as mcolors
 # Simulation parameters
 num_charges = 50
 num_simulations_per_charge = 100 
+boundary_condition = "circular"  # "circular" or "periodic"
 
 # Simulation parameters
 radius = 1
@@ -23,6 +25,15 @@ tolerance = 0.001
 max_consecutive_iterations = 10 
 
 params = (radius, initial_temp, final_temp, cooling_rate, max_step, tolerance, max_consecutive_iterations)
+
+cooling_schedules = [
+    (exponential_cooling, 0.9999),
+    (linear_cooling, 0.0001),
+    (logarithmic_cooling, 0.001),
+    (quadratic_cooling, 0.001),
+    (fast_annealing, 0.001),
+    (boltzmann_cooling, 1)
+]
 
 
 def create_custom_colormap(original_cmap, start=0, stop=1):
@@ -41,18 +52,19 @@ def create_custom_colormap(original_cmap, start=0, stop=1):
 
 
 @jit
-def gather_all_final_positions(num_charges, num_simulations, params):
+def gather_all_final_positions(num_charges, num_simulations, params, max_energy):
     all_final_positions = np.zeros((num_simulations * num_charges, 2)) 
     for i in range(num_simulations):
-        final_positions = get_final_positions(num_charges, params)
+        final_positions = get_final_positions(num_charges, params, max_energy)
         all_final_positions[i * num_charges:(i + 1) * num_charges] = final_positions
         print(f"Simulation {i + 1} of {num_simulations} complete")
     return all_final_positions
 
 @jit
-def get_final_positions(num_charges, params):
-    _, particle_history, _ = simulate_and_visualize(num_charges, *params)
+def get_final_positions(num_charges, params, max_energy):
+    _, particle_history, _ = simulate_and_visualize(num_charges, boundary_condition, max_energy, *params)
     return particle_history[-1]
+
 
 def plot_combined_heatmap(all_final_positions, radius=1):
     plt.hist2d(all_final_positions[:, 0], all_final_positions[:, 1], bins=200, range=[[-radius, radius], [-radius, radius]], cmap='hot', density=True)
@@ -82,7 +94,7 @@ def plot_radial_distribution_gradient(all_final_positions, radius=1):
     counts, bin_edges = np.histogram(radial_distances, bins=1000, range=[0, radius], density=True)
 
     # Normalize the counts for color mapping
-    norm = LogNorm(vmin=counts[counts > 0].min(), vmax=counts.max())  # Avoid log(0) issues
+    norm = LogNorm(vmin=counts[counts > 0].min(), vmax=counts.max())
 
     # Creating the colormap
     original_cmap = plt.cm.viridis
@@ -117,11 +129,13 @@ def plot_radial_distribution_gradient(all_final_positions, radius=1):
 
 
 if __name__== "__main__":
-    # cProfile.run('gather_all_final_positions(num_charges, num_simulations_per_charge, params)', 'profile_stats.prof')
-    all_final_position_data = gather_all_final_positions(num_charges, num_simulations_per_charge, params)
-
-    # plot_combined_heatmap(all_final_position_data, radius)
-    plot_radial_distribution_gradient(all_final_position_data, radius)
+    max_config_particles = maximum_energy_configuration(num_charges, radius)
+    max_energy = calculate_energy(max_config_particles, 1)
     
+    # Ensure max_energy is passed correctly
+    all_final_position_data = gather_all_final_positions(num_charges, num_simulations_per_charge, params, max_energy)
+
+    # Visualization functions
+    plot_radial_distribution_gradient(all_final_position_data, radius)
 
 
