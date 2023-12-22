@@ -19,7 +19,7 @@ def format_function_name(function):
     return ' '.join(title_case_words)
 
 
-# Maximum energy configuration
+# Initial energy configuration
 def maximum_energy_configuration(num_particles, radius):
     particles = []
     for i in range(num_particles):

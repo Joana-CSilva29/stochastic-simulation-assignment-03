@@ -13,12 +13,16 @@ def linear_cooling(initial_temp, cooling_rate, iteration):
     return max(initial_temp - cooling_rate * iteration, 0)
 
 def boltzmann_cooling(initial_temp, iteration, _unused):
+    a=1
+    b=1
     if iteration == 0:
         return initial_temp
-    return initial_temp / math.log(1 + iteration)
+    return (a * initial_temp) / math.log(b + iteration)
 
 def logarithmic_cooling(initial_temp, cooling_rate, iteration):
-    return initial_temp / (1 + cooling_rate * math.log(1 + iteration))
+    a=1
+    b=1
+    return initial_temp / (1 + a * cooling_rate * math.log(b + iteration))
 
 def quadratic_cooling(initial_temp, cooling_rate, iteration):
     return initial_temp / (1 + cooling_rate * (iteration ** 2))

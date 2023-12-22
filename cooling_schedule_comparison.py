@@ -14,10 +14,10 @@ sns.set_style("whitegrid")
 
 cooling_schedules = [
     (exponential_cooling, 0.9999),
-    (linear_cooling, 0.0001),
+    # (linear_cooling, 0.0001),
     (logarithmic_cooling, 0.001),
-    (quadratic_cooling, 0.001),
-    (fast_annealing, 0.001),
+    # (quadratic_cooling, 0.001),
+    # (fast_annealing, 0.001),
     (boltzmann_cooling, 1)
 ]
 
@@ -92,35 +92,46 @@ def main():
     max_display_iterations = 50
 
     reference_energy = potential_energy_circle(num_particles)
-    initial_particles = initial_configuration(num_particles)
 
     fig, ax_energy = plt.subplots(figsize=(10, 6))
 
     for cooling_function, cooling_parameter in cooling_schedules:
-        all_energies = run_multiple_simulations(
-            initial_particles, 
-            num_runs, 
-            radius, 
-            initial_temp, 
-            cooling_function, 
-            max_step, 
-            tolerance, 
-            max_consecutive_iterations, 
-            cooling_parameter,
-            boundary_condition,
-            reference_energy,
-            max_display_iterations
-        )
+        all_energies = []
 
+        for _ in range(num_runs):
+            initial_particles = initial_configuration(num_particles)
+            _, _, energies = simulate_and_visualize(
+                initial_particles,
+                radius,
+                initial_temp,
+                cooling_function,
+                max_step,
+                tolerance,
+                max_consecutive_iterations,
+                cooling_parameter,
+                boundary_condition,
+                reference_energy
+            )
+            normalized_energies = 100 * np.array(energies) / energies[0]  # Normalize to start at 100%
+            if len(normalized_energies) < max_display_iterations:
+                padding_length = max_display_iterations - len(normalized_energies)
+                padded_energies = np.pad(normalized_energies, (0, padding_length), 'constant', constant_values=(normalized_energies[-1],))
+            else:
+                padded_energies = normalized_energies[:max_display_iterations]
+
+            all_energies.append(padded_energies)
+
+        # Calculate the mean and 95% confidence interval for each cooling schedule
+        all_energies = np.array(all_energies)
         mean_energies = np.mean(all_energies, axis=0)
-        ci = stats.sem(all_energies, axis=0) * stats.t.ppf((1 + 0.95) / 2., num_runs - 1)  # 95% confidence interval
+        ci = stats.sem(all_energies, axis=0) * stats.t.ppf((1 + 0.95) / 2, num_runs - 1)
 
-        ax_energy.plot(range(max_display_iterations), mean_energies, label=f"{cooling_function.__name__} (param: {cooling_parameter})")
+        ax_energy.plot(range(max_display_iterations), mean_energies, label=f"{format_function_name(cooling_function)} (param: {cooling_parameter})")
         ax_energy.fill_between(range(max_display_iterations), mean_energies - ci, mean_energies + ci, alpha=0.2)
 
-    ax_energy.set_title(f"Mean System Energy with 95% Confidence Interval for {num_particles} Particles")
+    ax_energy.set_title(f"Normalized Mean System Energy with 95% Confidence Interval for {num_particles} Particles")
     ax_energy.set_xlabel("Step")
-    ax_energy.set_ylabel("Energy")
+    ax_energy.set_ylabel("Normalized Energy (%)")
     ax_energy.legend()
 
     plt.show()
