@@ -10,6 +10,7 @@ from numba import jit
 import cProfile
 from cooling_functions import *
 from simulated_annealing import *
+from initial_configs import *
 
 sns.set_style("whitegrid")
 
@@ -55,7 +56,7 @@ def update_plot(frame, particles, scat, radius, energies, cmap, norm, time_text,
 
 # Simulate and visualize the animation
 def simulate_and_visualize(num_particles, radius, initial_temp, cooling_function, max_step, tolerance, max_consecutive_iterations, cooling_parameter, boundary_condition, max_energy):
-    initial_particles = initial_configuration(num_particles)
+    initial_particles = initial_configuration_12(num_particles)
     best_particles, particle_history, energies = simulated_annealing(
         initial_particles,
         radius,
@@ -74,18 +75,22 @@ def simulate_and_visualize(num_particles, radius, initial_temp, cooling_function
 
 def main():
     boundary_condition = "circular" # "circular" or "periodic"
-    num_particles = 25
+    num_particles = 12
+    
+    # Simulation parameters
     radius = 1
-    initial_temp = 10
-    max_step = 0.02
+    initial_temp = 1000
+    final_temp = 0.001
+    max_step = 0.1
     tolerance = 0.001
-    max_consecutive_iterations = 1000 
+    max_consecutive_iterations = 1000
+
+    # Cooling function parameters
+    cooling_parameter = 0.001
+    cooling_function = quadratic_cooling
 
     table = None
     display_table = False
-
-    cooling_parameter = 0.9999  
-    cooling_function = exponential_cooling
     
     max_config_particles = maximum_energy_configuration(num_particles, radius)
     max_energy = calculate_energy(max_config_particles, 1)

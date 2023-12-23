@@ -71,7 +71,7 @@ def move_particle(particle, particles, max_step, radius, boundary_condition):
 
     if boundary_condition == "circular":
         if np.linalg.norm(new_particle) > radius:
-            new_particle = new_particle / np.linalg.norm(new_particle) * radius
+            new_particle = new_particle / np.linalg.norm(new_particle) * radius #- 0.001*radius
     elif boundary_condition == "periodic":
         if np.linalg.norm(new_particle) > radius:
             angle = np.arctan2(new_particle[1], new_particle[0])
@@ -84,7 +84,53 @@ def move_particle(particle, particles, max_step, radius, boundary_condition):
 
 
 
-# Simulated annealing
+#Simulated annealing
+
+# def simulated_annealing(particles, radius, initial_temp, cooling_function, max_step, tolerance, max_consecutive_iterations, cooling_parameter, boundary_condition, max_energy):
+    # temperature = initial_temp
+    # iteration = 0
+    # best_energy = calculate_energy(particles, max_energy)
+    # best_particles = np.copy(particles)
+    # particle_history = [np.copy(particles)]
+    # energies = [best_energy]
+
+    # consecutive_low_change_count = 0
+
+    # while temperature > 0:
+    #     new_particles = np.copy(particles)
+    #     for i in range(len(particles)):
+    #         temperature = cooling_function(initial_temp, cooling_parameter, iteration)
+    #         new_temp_ratio = temperature / initial_temp
+    #         new_particle = move_particle(particles[i], particles, max_step * new_temp_ratio, radius, boundary_condition)
+    #         new_particles[i] = new_particle
+
+    #     new_energy = calculate_energy(new_particles, max_energy)
+    #     energy_change = new_energy - calculate_energy(particles, max_energy)
+
+    #     if energy_change < 0 or np.random.uniform() < np.exp(-energy_change / temperature):
+    #         particles = new_particles
+    #         current_energy = new_energy
+    #     else:
+    #         current_energy = calculate_energy(particles, max_energy)
+    #     if current_energy < best_energy:
+    #         best_energy = current_energy
+    #         best_particles = np.copy(particles)
+
+    #     energy_change = abs(energies[-1] - current_energy)
+
+    #     if energy_change < tolerance:
+    #         consecutive_low_change_count += 1
+    #     else:
+    #         consecutive_low_change_count = 0
+    #     if consecutive_low_change_count >= max_consecutive_iterations:
+    #         break
+
+    #     iteration += 1
+    #     particle_history.append(np.copy(particles))
+    #     energies.append(current_energy)
+
+    # return best_particles, particle_history, energies
+
 def simulated_annealing(particles, radius, initial_temp, cooling_function, max_step, tolerance, max_consecutive_iterations, cooling_parameter, boundary_condition, max_energy):
     temperature = initial_temp
     iteration = 0
@@ -93,44 +139,42 @@ def simulated_annealing(particles, radius, initial_temp, cooling_function, max_s
     particle_history = [np.copy(particles)]
     energies = [best_energy]
 
+    markov_chain_length = 1
     consecutive_low_change_count = 0
 
     while temperature > 0:
-        new_particles = np.copy(particles)
-        for i in range(len(particles)):
-            # Update temperature for each iteration
-            temperature = cooling_function(initial_temp, cooling_parameter, iteration)
-            new_temp_ratio = temperature / initial_temp
-            new_particle = move_particle(particles[i], particles, max_step * new_temp_ratio, radius, boundary_condition)
-            new_particles[i] = new_particle
+        for m in range(markov_chain_length):
+            new_particles = np.copy(particles)
+            for i in range(len(particles)):
+                new_temp_ratio = temperature / initial_temp
+                new_particle = move_particle(particles[i], particles, max_step * new_temp_ratio, radius, boundary_condition)
+                new_particles[i] = new_particle
 
-        new_energy = calculate_energy(new_particles, max_energy)
-        energy_change = new_energy - calculate_energy(particles, max_energy)
+            new_energy = calculate_energy(new_particles, max_energy)
+            energy_change = new_energy - calculate_energy(particles, max_energy)
 
-        # Metropolis criterion
-        if energy_change < 0 or np.random.uniform() < np.exp(-energy_change / temperature):
-            particles = new_particles
-            current_energy = new_energy
-        else:
-            current_energy = calculate_energy(particles, max_energy)
+            if energy_change < 0 or np.random.uniform() < np.exp(-energy_change / temperature):
+                particles = new_particles
+                current_energy = new_energy
+            else:
+                current_energy = calculate_energy(particles, max_energy)
+            if current_energy < best_energy:
+                best_energy = current_energy
+                best_particles = np.copy(particles)
 
-        if current_energy < best_energy:
-            best_energy = current_energy
-            best_particles = np.copy(particles)
+        particle_history.append(np.copy(particles))
+        energies.append(current_energy)
 
-        energy_change = abs(energies[-1] - current_energy)
-
+        # Checking for low energy changes
+        energy_change = abs(energies[-2] - current_energy)
         if energy_change < tolerance:
             consecutive_low_change_count += 1
         else:
             consecutive_low_change_count = 0
-
         if consecutive_low_change_count >= max_consecutive_iterations:
             break
 
+        temperature = cooling_function(initial_temp, cooling_parameter, iteration)
         iteration += 1
-        particle_history.append(np.copy(particles))
-        energies.append(current_energy)
 
     return best_particles, particle_history, energies
-
