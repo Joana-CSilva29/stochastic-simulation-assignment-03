@@ -15,7 +15,7 @@ def cartesian_to_polar(x, y):
 def format_function_name(function):
     name = function.__name__
     words = name.split('_')
-    title_case_words = [word.capitalize() for word in words]
+    title_case_words = [word.capitalize() for word in words if word.lower() != "cooling"]
     return ' '.join(title_case_words)
 
 
@@ -44,7 +44,9 @@ def calculate_energy(particles, max_energy):
 
 
 @jit
-def move_particle(particle, particles, max_step, radius, boundary_condition):
+def move_particle(particle, particles, max_step, temperature, initial_temp, radius, boundary_condition, adaptive_step_size):
+    # Calculate the adaptive step size
+    step_size = max_step * (temperature / initial_temp) if adaptive_step_size else max_step
     force_direction = np.array([0.0, 0.0])
     for other_particle in particles:
         if np.array_equal(particle, other_particle):
@@ -65,7 +67,7 @@ def move_particle(particle, particles, max_step, radius, boundary_condition):
 
     if np.linalg.norm(force_direction) > 0:
         force_direction_normalized = force_direction / np.linalg.norm(force_direction)
-        new_particle = particle + force_direction_normalized * max_step
+        new_particle = particle + force_direction_normalized * step_size
     else:
         new_particle = particle
 
@@ -85,7 +87,7 @@ def move_particle(particle, particles, max_step, radius, boundary_condition):
 
 
 # Simulated annealing
-def simulated_annealing(particles, radius, initial_temp, cooling_function, max_step, tolerance, max_consecutive_iterations, cooling_parameter, boundary_condition, max_energy):
+def simulated_annealing(particles, radius, initial_temp, cooling_function, max_step, tolerance, max_consecutive_iterations, cooling_parameter, boundary_condition, max_energy, adaptive_step_size):
     temperature = initial_temp
     iteration = 0
     best_energy = calculate_energy(particles, max_energy)
@@ -100,8 +102,7 @@ def simulated_annealing(particles, radius, initial_temp, cooling_function, max_s
         for i in range(len(particles)):
             # Update temperature for each iteration
             temperature = cooling_function(initial_temp, cooling_parameter, iteration)
-            new_temp_ratio = temperature / initial_temp
-            new_particle = move_particle(particles[i], particles, max_step * new_temp_ratio, radius, boundary_condition)
+            new_particle = move_particle(particles[i], particles, max_step, temperature, initial_temp, radius, boundary_condition, adaptive_step_size)
             new_particles[i] = new_particle
 
         new_energy = calculate_energy(new_particles, max_energy)
