@@ -2,7 +2,7 @@ import pandas as pd
 from scipy import stats
 
 # Read in the CSV file
-filename = 'Statistical_data_Logarithmic_Quadratic_Boltzmann.csv'
+filename = 'Statistical_data_Boltzmann.csv'
 df = pd.read_csv(filename)
 
 # Prepare DataFrame to hold test results

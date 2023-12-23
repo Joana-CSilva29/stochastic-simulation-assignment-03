@@ -81,13 +81,49 @@ def move_particle(particle, particles, max_step, temperature, initial_temp, radi
 
     return new_particle
 
+def calculate_force_vectors(particle, particles, radius, boundary_condition):
+    force_direction = np.array([0.0, 0.0])
+    for other_particle in particles:
+        if np.array_equal(particle, other_particle):
+            continue
 
+        difference = particle - other_particle
 
+        if boundary_condition == "periodic":
+            for i in range(2):
+                if abs(difference[i]) > radius:
+                    difference[i] -= np.sign(difference[i]) * 2 * radius
 
+        distance = np.linalg.norm(difference)
+        if distance == 0:
+            continue
+
+        force_direction += difference / distance**3
+    return force_direction
+
+def move_particle_nonseq(particle, max_step, temperature, initial_temp, radius, boundary_condition, adaptive_step_size, force_direction):
+    # Calculate the adaptive step size
+    step_size = max_step * (temperature / initial_temp) if adaptive_step_size else max_step
+
+    if np.linalg.norm(force_direction) > 0:
+        force_direction_normalized = force_direction / np.linalg.norm(force_direction)
+        new_particle = particle + force_direction_normalized * step_size
+    else:
+        new_particle = particle
+
+    if boundary_condition == "circular":
+        if np.linalg.norm(new_particle) > radius:
+            new_particle = new_particle / np.linalg.norm(new_particle) * radius
+    elif boundary_condition == "periodic":
+        if np.linalg.norm(new_particle) > radius:
+            angle = np.arctan2(new_particle[1], new_particle[0])
+            new_particle = np.array([np.cos(angle), np.sin(angle)]) * radius
+
+    return new_particle
 
 
 # Simulated annealing
-def simulated_annealing(particles, radius, initial_temp, cooling_function, max_step, tolerance, max_consecutive_iterations, cooling_parameter, boundary_condition, max_energy, adaptive_step_size):
+def simulated_annealing(particles, radius, initial_temp, cooling_function, max_step, tolerance, max_consecutive_iterations, cooling_parameter, boundary_condition, max_energy, adaptive_step_size, sequential):
     temperature = initial_temp
     iteration = 0
     best_energy = calculate_energy(particles, max_energy)
@@ -99,10 +135,16 @@ def simulated_annealing(particles, radius, initial_temp, cooling_function, max_s
 
     while temperature > 0:
         new_particles = np.copy(particles)
+        force_directions = [calculate_force_vectors(particle, particles, radius, boundary_condition) for particle in particles]
+
         for i in range(len(particles)):
             # Update temperature for each iteration
             temperature = cooling_function(initial_temp, cooling_parameter, iteration)
-            new_particle = move_particle(particles[i], particles, max_step, temperature, initial_temp, radius, boundary_condition, adaptive_step_size)
+            if sequential:
+                new_particle = move_particle(particles[i], particles, max_step, temperature, initial_temp, radius, boundary_condition, adaptive_step_size)
+            else:
+                new_particle = move_particle_nonseq(particles[i], max_step, temperature, initial_temp, radius, boundary_condition, adaptive_step_size, force_directions[i])
+            
             new_particles[i] = new_particle
 
         new_energy = calculate_energy(new_particles, max_energy)
@@ -134,4 +176,3 @@ def simulated_annealing(particles, radius, initial_temp, cooling_function, max_s
         energies.append(current_energy)
 
     return best_particles, particle_history, energies
-
