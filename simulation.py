@@ -56,7 +56,7 @@ def update_plot(frame, particles, scat, radius, energies, cmap, norm, time_text,
 
 # Simulate and visualize the animation
 def simulate_and_visualize(num_particles, radius, initial_temp, cooling_function, max_step, tolerance, max_consecutive_iterations, cooling_parameter, boundary_condition, max_energy):
-    initial_particles = initial_configuration_12(num_particles)
+    initial_particles = initial_configuration_17_to_29(num_particles)
     best_particles, particle_history, energies = simulated_annealing(
         initial_particles,
         radius,
@@ -75,7 +75,7 @@ def simulate_and_visualize(num_particles, radius, initial_temp, cooling_function
 
 def main():
     boundary_condition = "circular" # "circular" or "periodic"
-    num_particles = 12
+    num_particles = 20
     
     # Simulation parameters
     radius = 1
