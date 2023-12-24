@@ -9,6 +9,13 @@ from multiprocessing import Pool
 from numba import jit
 import matplotlib.colors as mcolors
 
+
+"""
+This script runs a series of simulations and plots the final positions of the particles as a heatmap.
+
+"""
+
+
 # Simulation parameters
 num_charges = 50
 num_simulations_per_charge = 100 
