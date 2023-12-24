@@ -37,11 +37,11 @@ These scripts were run with Python 3.11.0 on MacOS Ventura.
 The main functions were converted to machine code using @jit in order to speed up the simulation. This was disabled for the animations.
 
 ### Requirements:
-matplotlib==3.7.1
-numba==0.57.0
-numpy==1.24.3
-scipy==1.10.1
-seaborn==0.13.0
+* matplotlib==3.7.1
+* numba==0.57.0
+* numpy==1.24.3
+* scipy==1.10.1
+* seaborn==0.13.0
 
 
 ## Contact
