@@ -1,10 +1,10 @@
-# Stochastic Simulation Assignment 01 - Calculating the area of the Mandelbrot set
+# Stochastic Simulation Assignment 03 - Finding The Minimal Energy Configuration Of Charge Particle Within A Circle
 
 ### License:
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Overview
-This repository contains Python scripts developed for a the first assignment of Stochastic Simulation at the University of Amsterdam, 2023. The project focuses on the calculation of the area of the Mandelbrot set using Monte Carlo methods.
+This repository contains Python scripts developed for the third assignment of Stochastic Simulation at the University of Amsterdam, 2023. The project focuses on optimisation of repellent point charges in a circle using Simulated Annealing.
 
 ## File Descriptions
 
@@ -31,16 +31,15 @@ This file has the ability to visualise the fractal in different colormaps and ca
 
 ## Usage
 These scripts were run with Python 3.11.0 on MacOS Ventura. 
-The main functions were converted to machine code using @jit in order to speed up the simulation. This was disabled for time-per-simulation analysis.
+The main functions were converted to machine code using @jit in order to speed up the simulation. This was disabled for the animations.
 
 ### Requirements:
-* matplotlib==3.7.1
-* numba==0.57.0
-* numpy==1.24.3
-* pandas==1.5.3
-* scipy==1.10.1
-* seaborn==0.13.0
-* statsmodels==0.14.0
+matplotlib==3.7.1
+numba==0.57.0
+numpy==1.24.3
+scipy==1.10.1
+seaborn==0.13.0
+
 
 ## Contact
 joana.costaesilva@student.uva.nl
